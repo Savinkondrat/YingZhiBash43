@@ -1,0 +1,1134 @@
+6 Bash Features
+***************
+
+This section describes features unique to Bash.
+
+6.1 Invoking Bash
+=================
+
+     bash [long-opt] [-ir] [-abefhkmnptuvxdBCDHP] [-o OPTION] [-O SHOPT_OPTION] [ARGUMENT ...]
+     bash [long-opt] [-abefhkmnptuvxdBCDHP] [-o OPTION] [-O SHOPT_OPTION] -c STRING [ARGUMENT ...]
+     bash [long-opt] -s [-abefhkmnptuvxdBCDHP] [-o OPTION] [-O SHOPT_OPTION] [ARGUMENT ...]
+
+   All of the single-character options used with the 'set' builtin
+(*note The Set Builtin::) can be used as options when the shell is
+invoked.  In addition, there are several multi-character options that
+you can use.  These options must appear on the command line before the
+single-character options to be recognized.
+
+'--debugger'
+     Arrange for the debugger profile to be executed before the shell
+     starts.  Turns on extended debugging mode (see *note The Shopt
+     Builtin:: for a description of the 'extdebug' option to the 'shopt'
+     builtin).
+
+'--dump-po-strings'
+     A list of all double-quoted strings preceded by '$' is printed on
+     the standard output in the GNU 'gettext' PO (portable object) file
+     format.  Equivalent to '-D' except for the output format.
+
+'--dump-strings'
+     Equivalent to '-D'.
+
+'--help'
+     Display a usage message on standard output and exit successfully.
+
+'--init-file FILENAME'
+'--rcfile FILENAME'
+     Execute commands from FILENAME (instead of '~/.bashrc') in an
+     interactive shell.
+
+'--login'
+     Equivalent to '-l'.
+
+'--noediting'
+     Do not use the GNU Readline library (*note Command Line Editing::)
+     to read command lines when the shell is interactive.
+
+'--noprofile'
+     Don't load the system-wide startup file '/etc/profile' or any of
+     the personal initialization files '~/.bash_profile',
+     '~/.bash_login', or '~/.profile' when Bash is invoked as a login
+     shell.
+
+'--norc'
+     Don't read the '~/.bashrc' initialization file in an interactive
+     shell.  This is on by default if the shell is invoked as 'sh'.
+
+'--posix'
+     Change the behavior of Bash where the default operation differs
+     from the POSIX standard to match the standard.  This is intended to
+     make Bash behave as a strict superset of that standard.  *Note Bash
+     POSIX Mode::, for a description of the Bash POSIX mode.
+
+'--restricted'
+     Make the shell a restricted shell (*note The Restricted Shell::).
+
+'--verbose'
+     Equivalent to '-v'.  Print shell input lines as they're read.
+
+'--version'
+     Show version information for this instance of Bash on the standard
+     output and exit successfully.
+
+   There are several single-character options that may be supplied at
+invocation which are not available with the 'set' builtin.
+
+'-c STRING'
+     Read and execute commands from STRING after processing the options,
+     then exit.  Any remaining arguments are assigned to the positional
+     parameters, starting with '$0'.
+
+'-i'
+     Force the shell to run interactively.  Interactive shells are
+     described in *note Interactive Shells::.
+
+'-l'
+     Make this shell act as if it had been directly invoked by login.
+     When the shell is interactive, this is equivalent to starting a
+     login shell with 'exec -l bash'.  When the shell is not
+     interactive, the login shell startup files will be executed.  'exec
+     bash -l' or 'exec bash --login' will replace the current shell with
+     a Bash login shell.  *Note Bash Startup Files::, for a description
+     of the special behavior of a login shell.
+
+'-r'
+     Make the shell a restricted shell (*note The Restricted Shell::).
+
+'-s'
+     If this option is present, or if no arguments remain after option
+     processing, then commands are read from the standard input.  This
+     option allows the positional parameters to be set when invoking an
+     interactive shell.
+
+'-D'
+     A list of all double-quoted strings preceded by '$' is printed on
+     the standard output.  These are the strings that are subject to
+     language translation when the current locale is not 'C' or 'POSIX'
+     (*note Locale Translation::).  This implies the '-n' option; no
+     commands will be executed.
+
+'[-+]O [SHOPT_OPTION]'
+     SHOPT_OPTION is one of the shell options accepted by the 'shopt'
+     builtin (*note The Shopt Builtin::).  If SHOPT_OPTION is present,
+     '-O' sets the value of that option; '+O' unsets it.  If
+     SHOPT_OPTION is not supplied, the names and values of the shell
+     options accepted by 'shopt' are printed on the standard output.  If
+     the invocation option is '+O', the output is displayed in a format
+     that may be reused as input.
+
+'--'
+     A '--' signals the end of options and disables further option
+     processing.  Any arguments after the '--' are treated as filenames
+     and arguments.
+
+   A _login_ shell is one whose first character of argument zero is '-',
+or one invoked with the '--login' option.
+
+   An _interactive_ shell is one started without non-option arguments,
+unless '-s' is specified, without specifying the '-c' option, and whose
+input and output are both connected to terminals (as determined by
+'isatty(3)'), or one started with the '-i' option.  *Note Interactive
+Shells::, for more information.
+
+   If arguments remain after option processing, and neither the '-c' nor
+the '-s' option has been supplied, the first argument is assumed to be
+the name of a file containing shell commands (*note Shell Scripts::).
+When Bash is invoked in this fashion, '$0' is set to the name of the
+file, and the positional parameters are set to the remaining arguments.
+Bash reads and executes commands from this file, then exits.  Bash's
+exit status is the exit status of the last command executed in the
+script.  If no commands are executed, the exit status is 0.
+
+6.2 Bash Startup Files
+======================
+
+This section describes how Bash executes its startup files.  If any of
+the files exist but cannot be read, Bash reports an error.  Tildes are
+expanded in file names as described above under Tilde Expansion (*note
+Tilde Expansion::).
+
+   Interactive shells are described in *note Interactive Shells::.
+
+Invoked as an interactive login shell, or with '--login'
+........................................................
+
+When Bash is invoked as an interactive login shell, or as a
+non-interactive shell with the '--login' option, it first reads and
+executes commands from the file '/etc/profile', if that file exists.
+After reading that file, it looks for '~/.bash_profile',
+'~/.bash_login', and '~/.profile', in that order, and reads and executes
+commands from the first one that exists and is readable.  The
+'--noprofile' option may be used when the shell is started to inhibit
+this behavior.
+
+   When a login shell exits, Bash reads and executes commands from the
+file '~/.bash_logout', if it exists.
+
+Invoked as an interactive non-login shell
+.........................................
+
+When an interactive shell that is not a login shell is started, Bash
+reads and executes commands from '~/.bashrc', if that file exists.  This
+may be inhibited by using the '--norc' option.  The '--rcfile FILE'
+option will force Bash to read and execute commands from FILE instead of
+'~/.bashrc'.
+
+   So, typically, your '~/.bash_profile' contains the line
+     if [ -f ~/.bashrc ]; then . ~/.bashrc; fi
+after (or before) any login-specific initializations.
+
+Invoked non-interactively
+.........................
+
+When Bash is started non-interactively, to run a shell script, for
+example, it looks for the variable 'BASH_ENV' in the environment,
+expands its value if it appears there, and uses the expanded value as
+the name of a file to read and execute.  Bash behaves as if the
+following command were executed:
+     if [ -n "$BASH_ENV" ]; then . "$BASH_ENV"; fi
+but the value of the 'PATH' variable is not used to search for the file
+name.
+
+   As noted above, if a non-interactive shell is invoked with the
+'--login' option, Bash attempts to read and execute commands from the
+login shell startup files.
+
+Invoked with name 'sh'
+......................
+
+If Bash is invoked with the name 'sh', it tries to mimic the startup
+behavior of historical versions of 'sh' as closely as possible, while
+conforming to the POSIX standard as well.
+
+   When invoked as an interactive login shell, or as a non-interactive
+shell with the '--login' option, it first attempts to read and execute
+commands from '/etc/profile' and '~/.profile', in that order.  The
+'--noprofile' option may be used to inhibit this behavior.  When invoked
+as an interactive shell with the name 'sh', Bash looks for the variable
+'ENV', expands its value if it is defined, and uses the expanded value
+as the name of a file to read and execute.  Since a shell invoked as
+'sh' does not attempt to read and execute commands from any other
+startup files, the '--rcfile' option has no effect.  A non-interactive
+shell invoked with the name 'sh' does not attempt to read any other
+startup files.
+
+   When invoked as 'sh', Bash enters POSIX mode after the startup files
+are read.
+
+Invoked in POSIX mode
+.....................
+
+When Bash is started in POSIX mode, as with the '--posix' command line
+option, it follows the POSIX standard for startup files.  In this mode,
+interactive shells expand the 'ENV' variable and commands are read and
+executed from the file whose name is the expanded value.  No other
+startup files are read.
+
+Invoked by remote shell daemon
+..............................
+
+Bash attempts to determine when it is being run with its standard input
+connected to a network connection, as when executed by the remote shell
+daemon, usually 'rshd', or the secure shell daemon 'sshd'.  If Bash
+determines it is being run in this fashion, it reads and executes
+commands from '~/.bashrc', if that file exists and is readable.  It will
+not do this if invoked as 'sh'.  The '--norc' option may be used to
+inhibit this behavior, and the '--rcfile' option may be used to force
+another file to be read, but 'rshd' does not generally invoke the shell
+with those options or allow them to be specified.
+
+Invoked with unequal effective and real UID/GIDs
+................................................
+
+If Bash is started with the effective user (group) id not equal to the
+real user (group) id, and the '-p' option is not supplied, no startup
+files are read, shell functions are not inherited from the environment,
+the 'SHELLOPTS', 'BASHOPTS', 'CDPATH', and 'GLOBIGNORE' variables, if
+they appear in the environment, are ignored, and the effective user id
+is set to the real user id.  If the '-p' option is supplied at
+invocation, the startup behavior is the same, but the effective user id
+is not reset.
+
+6.3 Interactive Shells
+======================
+
+6.3.1 What is an Interactive Shell?
+-----------------------------------
+
+An interactive shell is one started without non-option arguments, unless
+'-s' is specified, without specifying the '-c' option, and whose input
+and error output are both connected to terminals (as determined by
+'isatty(3)'), or one started with the '-i' option.
+
+   An interactive shell generally reads from and writes to a user's
+terminal.
+
+   The '-s' invocation option may be used to set the positional
+parameters when an interactive shell is started.
+
+6.3.2 Is this Shell Interactive?
+--------------------------------
+
+To determine within a startup script whether or not Bash is running
+interactively, test the value of the '-' special parameter.  It contains
+'i' when the shell is interactive.  For example:
+
+
+[demo]
+
+     case "$-" in
+     *i*)	echo This shell is interactive ;;
+     *)	echo This shell is not interactive ;;
+     esac
+
+
+[/demo]
+
+   Alternatively, startup scripts may examine the variable 'PS1'; it is
+unset in non-interactive shells, and set in interactive shells.  Thus:
+
+
+[demo]
+
+     if [ -z "$PS1" ]; then
+             echo This shell is not interactive
+     else
+             echo This shell is interactive
+     fi
+
+
+[/demo]
+
+6.3.3 Interactive Shell Behavior
+--------------------------------
+
+When the shell is running interactively, it changes its behavior in
+several ways.
+
+  1. Startup files are read and executed as described in *note Bash
+     Startup Files::.
+
+  2. Job Control (*note Job Control::) is enabled by default.  When job
+     control is in effect, Bash ignores the keyboard-generated job
+     control signals 'SIGTTIN', 'SIGTTOU', and 'SIGTSTP'.
+
+  3. Bash expands and displays 'PS1' before reading the first line of a
+     command, and expands and displays 'PS2' before reading the second
+     and subsequent lines of a multi-line command.
+
+  4. Bash executes the value of the 'PROMPT_COMMAND' variable as a
+     command before printing the primary prompt, '$PS1' (*note Bash
+     Variables::).
+
+  5. Readline (*note Command Line Editing::) is used to read commands
+     from the user's terminal.
+
+  6. Bash inspects the value of the 'ignoreeof' option to 'set -o'
+     instead of exiting immediately when it receives an 'EOF' on its
+     standard input when reading a command (*note The Set Builtin::).
+
+  7. Command history (*note Bash History Facilities::) and history
+     expansion (*note History Interaction::) are enabled by default.
+     Bash will save the command history to the file named by '$HISTFILE'
+     when an interactive shell exits.
+
+  8. Alias expansion (*note Aliases::) is performed by default.
+
+  9. In the absence of any traps, Bash ignores 'SIGTERM' (*note
+     Signals::).
+
+  10. In the absence of any traps, 'SIGINT' is caught and handled
+     ((*note Signals::).  'SIGINT' will interrupt some shell builtins.
+
+  11. An interactive login shell sends a 'SIGHUP' to all jobs on exit if
+     the 'huponexit' shell option has been enabled (*note Signals::).
+
+  12. The '-n' invocation option is ignored, and 'set -n' has no effect
+     (*note The Set Builtin::).
+
+  13. Bash will check for mail periodically, depending on the values of
+     the 'MAIL', 'MAILPATH', and 'MAILCHECK' shell variables (*note Bash
+     Variables::).
+
+  14. Expansion errors due to references to unbound shell variables
+     after 'set -u' has been enabled will not cause the shell to exit
+     (*note The Set Builtin::).
+
+  15. The shell will not exit on expansion errors caused by VAR being
+     unset or null in '${VAR:?WORD}' expansions (*note Shell Parameter
+     Expansion::).
+
+  16. Redirection errors encountered by shell builtins will not cause
+     the shell to exit.
+
+  17. When running in POSIX mode, a special builtin returning an error
+     status will not cause the shell to exit (*note Bash POSIX Mode::).
+
+  18. A failed 'exec' will not cause the shell to exit (*note Bourne
+     Shell Builtins::).
+
+  19. Parser syntax errors will not cause the shell to exit.
+
+  20. Simple spelling correction for directory arguments to the 'cd'
+     builtin is enabled by default (see the description of the 'cdspell'
+     option to the 'shopt' builtin in *note The Shopt Builtin::).
+
+  21. The shell will check the value of the 'TMOUT' variable and exit if
+     a command is not read within the specified number of seconds after
+     printing '$PS1' (*note Bash Variables::).
+
+6.4 Bash Conditional Expressions
+================================
+
+Conditional expressions are used by the '[[' compound command and the
+'test' and '[' builtin commands.
+
+   Expressions may be unary or binary.  Unary expressions are often used
+to examine the status of a file.  There are string operators and numeric
+comparison operators as well.  If the FILE argument to one of the
+primaries is of the form '/dev/fd/N', then file descriptor N is checked.
+If the FILE argument to one of the primaries is one of '/dev/stdin',
+'/dev/stdout', or '/dev/stderr', file descriptor 0, 1, or 2,
+respectively, is checked.
+
+   When used with '[[', the '<' and '>' operators sort lexicographically
+using the current locale.  The 'test' command uses ASCII ordering.
+
+   Unless otherwise specified, primaries that operate on files follow
+symbolic links and operate on the target of the link, rather than the
+link itself.
+
+'-a FILE'
+     True if FILE exists.
+
+'-b FILE'
+     True if FILE exists and is a block special file.
+
+'-c FILE'
+     True if FILE exists and is a character special file.
+
+'-d FILE'
+     True if FILE exists and is a directory.
+
+'-e FILE'
+     True if FILE exists.
+
+'-f FILE'
+     True if FILE exists and is a regular file.
+
+'-g FILE'
+     True if FILE exists and its set-group-id bit is set.
+
+'-h FILE'
+     True if FILE exists and is a symbolic link.
+
+'-k FILE'
+     True if FILE exists and its "sticky" bit is set.
+
+'-p FILE'
+     True if FILE exists and is a named pipe (FIFO).
+
+'-r FILE'
+     True if FILE exists and is readable.
+
+'-s FILE'
+     True if FILE exists and has a size greater than zero.
+
+'-t FD'
+     True if file descriptor FD is open and refers to a terminal.
+
+'-u FILE'
+     True if FILE exists and its set-user-id bit is set.
+
+'-w FILE'
+     True if FILE exists and is writable.
+
+'-x FILE'
+     True if FILE exists and is executable.
+
+'-G FILE'
+     True if FILE exists and is owned by the effective group id.
+
+'-L FILE'
+     True if FILE exists and is a symbolic link.
+
+'-N FILE'
+     True if FILE exists and has been modified since it was last read.
+
+'-O FILE'
+     True if FILE exists and is owned by the effective user id.
+
+'-S FILE'
+     True if FILE exists and is a socket.
+
+'FILE1 -ef FILE2'
+     True if FILE1 and FILE2 refer to the same device and inode numbers.
+
+'FILE1 -nt FILE2'
+     True if FILE1 is newer (according to modification date) than FILE2,
+     or if FILE1 exists and FILE2 does not.
+
+'FILE1 -ot FILE2'
+     True if FILE1 is older than FILE2, or if FILE2 exists and FILE1
+     does not.
+
+'-o OPTNAME'
+     True if the shell option OPTNAME is enabled.  The list of options
+     appears in the description of the '-o' option to the 'set' builtin
+     (*note The Set Builtin::).
+
+'-v VARNAME'
+     True if the shell variable VARNAME is set (has been assigned a
+     value).
+
+'-z STRING'
+     True if the length of STRING is zero.
+
+'-n STRING'
+'STRING'
+     True if the length of STRING is non-zero.
+
+'STRING1 == STRING2'
+'STRING1 = STRING2'
+     True if the strings are equal.  '=' should be used with the 'test'
+     command for POSIX conformance.
+
+'STRING1 != STRING2'
+     True if the strings are not equal.
+
+'STRING1 < STRING2'
+     True if STRING1 sorts before STRING2 lexicographically.
+
+'STRING1 > STRING2'
+     True if STRING1 sorts after STRING2 lexicographically.
+
+'ARG1 OP ARG2'
+     'OP' is one of '-eq', '-ne', '-lt', '-le', '-gt', or '-ge'.  These
+     arithmetic binary operators return true if ARG1 is equal to, not
+     equal to, less than, less than or equal to, greater than, or
+     greater than or equal to ARG2, respectively.  ARG1 and ARG2 may be
+     positive or negative integers.
+
+6.5 Shell Arithmetic
+====================
+
+The shell allows arithmetic expressions to be evaluated, as one of the
+shell expansions or by the 'let' and the '-i' option to the 'declare'
+builtins.
+
+   Evaluation is done in fixed-width integers with no check for
+overflow, though division by 0 is trapped and flagged as an error.  The
+operators and their precedence, associativity, and values are the same
+as in the C language.  The following list of operators is grouped into
+levels of equal-precedence operators.  The levels are listed in order of
+decreasing precedence.
+
+'ID++ ID--'
+     variable post-increment and post-decrement
+
+'++ID --ID'
+     variable pre-increment and pre-decrement
+
+'- +'
+     unary minus and plus
+
+'! ~'
+     logical and bitwise negation
+
+'**'
+     exponentiation
+
+'* / %'
+     multiplication, division, remainder
+
+'+ -'
+     addition, subtraction
+
+'<< >>'
+     left and right bitwise shifts
+
+'<= >= < >'
+     comparison
+
+'== !='
+     equality and inequality
+
+'&'
+     bitwise AND
+
+'^'
+     bitwise exclusive OR
+
+'|'
+     bitwise OR
+
+'&&'
+     logical AND
+
+'||'
+     logical OR
+
+'expr ? expr : expr'
+     conditional operator
+
+'= *= /= %= += -= <<= >>= &= ^= |='
+     assignment
+
+'expr1 , expr2'
+     comma
+
+   Shell variables are allowed as operands; parameter expansion is
+performed before the expression is evaluated.  Within an expression,
+shell variables may also be referenced by name without using the
+parameter expansion syntax.  A shell variable that is null or unset
+evaluates to 0 when referenced by name without using the parameter
+expansion syntax.  The value of a variable is evaluated as an arithmetic
+expression when it is referenced, or when a variable which has been
+given the INTEGER attribute using 'declare -i' is assigned a value.  A
+null value evaluates to 0.  A shell variable need not have its INTEGER
+attribute turned on to be used in an expression.
+
+   Constants with a leading 0 are interpreted as octal numbers.  A
+leading '0x' or '0X' denotes hexadecimal.  Otherwise, numbers take the
+form [BASE'#']N, where the optional BASE is a decimal number between 2
+and 64 representing the arithmetic base, and N is a number in that base.
+If BASE'#' is omitted, then base 10 is used.  The digits greater than 9
+are represented by the lowercase letters, the uppercase letters, '@',
+and '_', in that order.  If BASE is less than or equal to 36, lowercase
+and uppercase letters may be used interchangeably to represent numbers
+between 10 and 35.
+
+   Operators are evaluated in order of precedence.  Sub-expressions in
+parentheses are evaluated first and may override the precedence rules
+above.
+
+6.6 Aliases
+===========
+
+ALIASES allow a string to be substituted for a word when it is used as
+the first word of a simple command.  The shell maintains a list of
+aliases that may be set and unset with the 'alias' and 'unalias' builtin
+commands.
+
+   The first word of each simple command, if unquoted, is checked to see
+if it has an alias.  If so, that word is replaced by the text of the
+alias.  The characters '/', '$', '`', '=' and any of the shell
+metacharacters or quoting characters listed above may not appear in an
+alias name.  The replacement text may contain any valid shell input,
+including shell metacharacters.  The first word of the replacement text
+is tested for aliases, but a word that is identical to an alias being
+expanded is not expanded a second time.  This means that one may alias
+'ls' to '"ls -F"', for instance, and Bash does not try to recursively
+expand the replacement text.  If the last character of the alias value
+is a space or tab character, then the next command word following the
+alias is also checked for alias expansion.
+
+   Aliases are created and listed with the 'alias' command, and removed
+with the 'unalias' command.
+
+   There is no mechanism for using arguments in the replacement text, as
+in 'csh'.  If arguments are needed, a shell function should be used
+(*note Shell Functions::).
+
+   Aliases are not expanded when the shell is not interactive, unless
+the 'expand_aliases' shell option is set using 'shopt' (*note The Shopt
+Builtin::).
+
+   The rules concerning the definition and use of aliases are somewhat
+confusing.  Bash always reads at least one complete line of input before
+executing any of the commands on that line.  Aliases are expanded when a
+command is read, not when it is executed.  Therefore, an alias
+definition appearing on the same line as another command does not take
+effect until the next line of input is read.  The commands following the
+alias definition on that line are not affected by the new alias.  This
+behavior is also an issue when functions are executed.  Aliases are
+expanded when a function definition is read, not when the function is
+executed, because a function definition is itself a compound command.
+As a consequence, aliases defined in a function are not available until
+after that function is executed.  To be safe, always put alias
+definitions on a separate line, and do not use 'alias' in compound
+commands.
+
+   For almost every purpose, shell functions are preferred over aliases.
+
+6.7 Arrays
+==========
+
+Bash provides one-dimensional indexed and associative array variables.
+Any variable may be used as an indexed array; the 'declare' builtin will
+explicitly declare an array.  There is no maximum limit on the size of
+an array, nor any requirement that members be indexed or assigned
+contiguously.  Indexed arrays are referenced using integers (including
+arithmetic expressions (*note Shell Arithmetic::) and are zero-based;
+associative arrays use arbitrary strings.
+
+   An indexed array is created automatically if any variable is assigned
+to using the syntax
+     name[SUBSCRIPT]=VALUE
+
+The SUBSCRIPT is treated as an arithmetic expression that must evaluate
+to a number.  If SUBSCRIPT evaluates to a number less than zero, it is
+used as an offset from one greater than the array's maximum index (so a
+subcript of -1 refers to the last element of the array).  To explicitly
+declare an array, use
+     declare -a NAME
+The syntax
+     declare -a NAME[SUBSCRIPT]
+is also accepted; the SUBSCRIPT is ignored.
+
+   Associative arrays are created using
+     declare -A NAME.
+
+   Attributes may be specified for an array variable using the 'declare'
+and 'readonly' builtins.  Each attribute applies to all members of an
+array.
+
+   Arrays are assigned to using compound assignments of the form
+     name=(value1 ... valueN)
+where each VALUE is of the form '[SUBSCRIPT]='STRING.  Indexed array
+assignments do not require the bracket and subscript.  When assigning to
+indexed arrays, if the optional subscript is supplied, that index is
+assigned to; otherwise the index of the element assigned is the last
+index assigned to by the statement plus one.  Indexing starts at zero.
+
+   When assigning to an associative array, the subscript is required.
+
+   This syntax is also accepted by the 'declare' builtin.  Individual
+array elements may be assigned to using the 'name['SUBSCRIPT']='VALUE
+syntax introduced above.
+
+   Any element of an array may be referenced using
+'${name['SUBSCRIPT']}'.  The braces are required to avoid conflicts with
+the shell's filename expansion operators.  If the SUBSCRIPT is '@' or
+'*', the word expands to all members of the array NAME.  These
+subscripts differ only when the word appears within double quotes.  If
+the word is double-quoted, '${name[*]}' expands to a single word with
+the value of each array member separated by the first character of the
+'IFS' variable, and '${name[@]}' expands each element of NAME to a
+separate word.  When there are no array members, '${name[@]}' expands to
+nothing.  If the double-quoted expansion occurs within a word, the
+expansion of the first parameter is joined with the beginning part of
+the original word, and the expansion of the last parameter is joined
+with the last part of the original word.  This is analogous to the
+expansion of the special parameters '@' and '*'.
+'${#name['SUBSCRIPT']}' expands to the length of '${name['SUBSCRIPT']}'.
+If SUBSCRIPT is '@' or '*', the expansion is the number of elements in
+the array.  Referencing an array variable without a subscript is
+equivalent to referencing with a subscript of 0.
+
+   An array variable is considered set if a subscript has been assigned
+a value.  The null string is a valid value.
+
+   The 'unset' builtin is used to destroy arrays.  'unset'
+NAME[SUBSCRIPT] destroys the array element at index SUBSCRIPT.  Care
+must be taken to avoid unwanted side effects caused by filename
+expansion.  'unset' NAME, where NAME is an array, removes the entire
+array.  A subscript of '*' or '@' also removes the entire array.
+
+   The 'declare', 'local', and 'readonly' builtins each accept a '-a'
+option to specify an indexed array and a '-A' option to specify an
+associative array.  If both options are supplied, '-A' takes precedence.
+The 'read' builtin accepts a '-a' option to assign a list of words read
+from the standard input to an array, and can read values from the
+standard input into individual array elements.  The 'set' and 'declare'
+builtins display array values in a way that allows them to be reused as
+input.
+
+6.8 The Directory Stack
+=======================
+
+The directory stack is a list of recently-visited directories.  The
+'pushd' builtin adds directories to the stack as it changes the current
+directory, and the 'popd' builtin removes specified directories from the
+stack and changes the current directory to the directory removed.  The
+'dirs' builtin displays the contents of the directory stack.
+
+   The contents of the directory stack are also visible as the value of
+the 'DIRSTACK' shell variable.
+
+6.8.1 Directory Stack Builtins
+------------------------------
+
+'dirs'
+          dirs [+N | -N] [-clpv]
+     Display the list of currently remembered directories.  Directories
+     are added to the list with the 'pushd' command; the 'popd' command
+     removes directories from the list.
+     '+N'
+          Displays the Nth directory (counting from the left of the list
+          printed by 'dirs' when invoked without options), starting with
+          zero.
+     '-N'
+          Displays the Nth directory (counting from the right of the
+          list printed by 'dirs' when invoked without options), starting
+          with zero.
+     '-c'
+          Clears the directory stack by deleting all of the elements.
+     '-l'
+          Produces a longer listing; the default listing format uses a
+          tilde to denote the home directory.
+     '-p'
+          Causes 'dirs' to print the directory stack with one entry per
+          line.
+     '-v'
+          Causes 'dirs' to print the directory stack with one entry per
+          line, prefixing each entry with its index in the stack.
+
+'popd'
+          popd [+N | -N] [-n]
+
+     Remove the top entry from the directory stack, and 'cd' to the new
+     top directory.  When no arguments are given, 'popd' removes the top
+     directory from the stack and performs a 'cd' to the new top
+     directory.  The elements are numbered from 0 starting at the first
+     directory listed with 'dirs'; i.e., 'popd' is equivalent to 'popd
+     +0'.
+     '+N'
+          Removes the Nth directory (counting from the left of the list
+          printed by 'dirs'), starting with zero.
+     '-N'
+          Removes the Nth directory (counting from the right of the list
+          printed by 'dirs'), starting with zero.
+     '-n'
+          Suppresses the normal change of directory when removing
+          directories from the stack, so that only the stack is
+          manipulated.
+
+'pushd'
+          pushd [-n] [+N | -N | DIR ]
+
+     Save the current directory on the top of the directory stack and
+     then 'cd' to DIR.  With no arguments, 'pushd' exchanges the top two
+     directories.
+
+     '-n'
+          Suppresses the normal change of directory when adding
+          directories to the stack, so that only the stack is
+          manipulated.
+     '+N'
+          Brings the Nth directory (counting from the left of the list
+          printed by 'dirs', starting with zero) to the top of the list
+          by rotating the stack.
+     '-N'
+          Brings the Nth directory (counting from the right of the list
+          printed by 'dirs', starting with zero) to the top of the list
+          by rotating the stack.
+     'DIR'
+          Makes the current working directory be the top of the stack,
+          and then executes the equivalent of ''cd' DIR'.  'cd's to DIR.
+
+6.9 Controlling the Prompt
+==========================
+
+The value of the variable 'PROMPT_COMMAND' is examined just before Bash
+prints each primary prompt.  If 'PROMPT_COMMAND' is set and has a
+non-null value, then the value is executed just as if it had been typed
+on the command line.
+
+   In addition, the following table describes the special characters
+which can appear in the prompt variables:
+
+'\a'
+     A bell character.
+'\d'
+     The date, in "Weekday Month Date" format (e.g., "Tue May 26").
+'\D{FORMAT}'
+     The FORMAT is passed to 'strftime'(3) and the result is inserted
+     into the prompt string; an empty FORMAT results in a
+     locale-specific time representation.  The braces are required.
+'\e'
+     An escape character.
+'\h'
+     The hostname, up to the first '.'.
+'\H'
+     The hostname.
+'\j'
+     The number of jobs currently managed by the shell.
+'\l'
+     The basename of the shell's terminal device name.
+'\n'
+     A newline.
+'\r'
+     A carriage return.
+'\s'
+     The name of the shell, the basename of '$0' (the portion following
+     the final slash).
+'\t'
+     The time, in 24-hour HH:MM:SS format.
+'\T'
+     The time, in 12-hour HH:MM:SS format.
+'\@'
+     The time, in 12-hour am/pm format.
+'\A'
+     The time, in 24-hour HH:MM format.
+'\u'
+     The username of the current user.
+'\v'
+     The version of Bash (e.g., 2.00)
+'\V'
+     The release of Bash, version + patchlevel (e.g., 2.00.0)
+'\w'
+     The current working directory, with '$HOME' abbreviated with a
+     tilde (uses the '$PROMPT_DIRTRIM' variable).
+'\W'
+     The basename of '$PWD', with '$HOME' abbreviated with a tilde.
+'\!'
+     The history number of this command.
+'\#'
+     The command number of this command.
+'\$'
+     If the effective uid is 0, '#', otherwise '$'.
+'\NNN'
+     The character whose ASCII code is the octal value NNN.
+'\\'
+     A backslash.
+'\['
+     Begin a sequence of non-printing characters.  This could be used to
+     embed a terminal control sequence into the prompt.
+'\]'
+     End a sequence of non-printing characters.
+
+   The command number and the history number are usually different: the
+history number of a command is its position in the history list, which
+may include commands restored from the history file (*note Bash History
+Facilities::), while the command number is the position in the sequence
+of commands executed during the current shell session.
+
+   After the string is decoded, it is expanded via parameter expansion,
+command substitution, arithmetic expansion, and quote removal, subject
+to the value of the 'promptvars' shell option (*note Bash Builtins::).
+
+6.10 The Restricted Shell
+=========================
+
+If Bash is started with the name 'rbash', or the '--restricted' or '-r'
+option is supplied at invocation, the shell becomes restricted.  A
+restricted shell is used to set up an environment more controlled than
+the standard shell.  A restricted shell behaves identically to 'bash'
+with the exception that the following are disallowed or not performed:
+
+   * Changing directories with the 'cd' builtin.
+   * Setting or unsetting the values of the 'SHELL', 'PATH', 'ENV', or
+     'BASH_ENV' variables.
+   * Specifying command names containing slashes.
+   * Specifying a filename containing a slash as an argument to the '.'
+     builtin command.
+   * Specifying a filename containing a slash as an argument to the '-p'
+     option to the 'hash' builtin command.
+   * Importing function definitions from the shell environment at
+     startup.
+   * Parsing the value of 'SHELLOPTS' from the shell environment at
+     startup.
+   * Redirecting output using the '>', '>|', '<>', '>&', '&>', and '>>'
+     redirection operators.
+   * Using the 'exec' builtin to replace the shell with another command.
+   * Adding or deleting builtin commands with the '-f' and '-d' options
+     to the 'enable' builtin.
+   * Using the 'enable' builtin command to enable disabled shell
+     builtins.
+   * Specifying the '-p' option to the 'command' builtin.
+   * Turning off restricted mode with 'set +r' or 'set +o restricted'.
+
+   These restrictions are enforced after any startup files are read.
+
+   When a command that is found to be a shell script is executed (*note
+Shell Scripts::), 'rbash' turns off any restrictions in the shell
+spawned to execute the script.
+
+6.11 Bash POSIX Mode
+====================
+
+Starting Bash with the '--posix' command-line option or executing 'set
+-o posix' while Bash is running will cause Bash to conform more closely
+to the POSIX standard by changing the behavior to match that specified
+by POSIX in areas where the Bash default differs.
+
+   When invoked as 'sh', Bash enters POSIX mode after reading the
+startup files.
+
+   The following list is what's changed when 'POSIX mode' is in effect:
+
+  1. When a command in the hash table no longer exists, Bash will
+     re-search '$PATH' to find the new location.  This is also available
+     with 'shopt -s checkhash'.
+
+  2. The message printed by the job control code and builtins when a job
+     exits with a non-zero status is 'Done(status)'.
+
+  3. The message printed by the job control code and builtins when a job
+     is stopped is 'Stopped(SIGNAME)', where SIGNAME is, for example,
+     'SIGTSTP'.
+
+  4. The 'bg' builtin uses the required format to describe each job
+     placed in the background, which does not include an indication of
+     whether the job is the current or previous job.
+
+  5. Reserved words appearing in a context where reserved words are
+     recognized do not undergo alias expansion.
+
+  6. The POSIX 'PS1' and 'PS2' expansions of '!' to the history number
+     and '!!' to '!' are enabled, and parameter expansion is performed
+     on the values of 'PS1' and 'PS2' regardless of the setting of the
+     'promptvars' option.
+
+  7. The POSIX startup files are executed ('$ENV') rather than the
+     normal Bash files.
+
+  8. Tilde expansion is only performed on assignments preceding a
+     command name, rather than on all assignment statements on the line.
+
+  9. The default history file is '~/.sh_history' (this is the default
+     value of '$HISTFILE').
+
+  10. The output of 'kill -l' prints all the signal names on a single
+     line, separated by spaces, without the 'SIG' prefix.
+
+  11. The 'kill' builtin does not accept signal names with a 'SIG'
+     prefix.
+
+  12. Non-interactive shells exit if FILENAME in '.'  FILENAME is not
+     found.
+
+  13. Non-interactive shells exit if a syntax error in an arithmetic
+     expansion results in an invalid expression.
+
+  14. Non-interactive shells exit if there is a syntax error in a script
+     read with the '.' or 'source' builtins, or in a string processed by
+     the 'eval' builtin.
+
+  15. Redirection operators do not perform filename expansion on the
+     word in the redirection unless the shell is interactive.
+
+  16. Redirection operators do not perform word splitting on the word in
+     the redirection.
+
+  17. Function names must be valid shell 'name's.  That is, they may not
+     contain characters other than letters, digits, and underscores, and
+     may not start with a digit.  Declaring a function with an invalid
+     name causes a fatal syntax error in non-interactive shells.
+
+  18. POSIX special builtins are found before shell functions during
+     command lookup.
+
+  19. The 'time' reserved word may be used by itself as a command.  When
+     used in this way, it displays timing statistics for the shell and
+     its completed children.  The 'TIMEFORMAT' variable controls the
+     format of the timing information.
+
+  20. When parsing and expanding a ${...} expansion that appears within
+     double quotes, single quotes are no longer special and cannot be
+     used to quote a closing brace or other special character, unless
+     the operator is one of those defined to perform pattern removal.
+     In this case, they do not have to appear as matched pairs.
+
+  21. The parser does not recognize 'time' as a reserved word if the
+     next token begins with a '-'.
+
+  22. If a POSIX special builtin returns an error status, a
+     non-interactive shell exits.  The fatal errors are those listed in
+     the POSIX standard, and include things like passing incorrect
+     options, redirection errors, variable assignment errors for
+     assignments preceding the command name, and so on.
+
+  23. A non-interactive shell exits with an error status if a variable
+     assignment error occurs when no command name follows the assignment
+     statements.  A variable assignment error occurs, for example, when
+     trying to assign a value to a readonly variable.
+
+  24. A non-interactive shell exists with an error status if a variable
+     assignment error occurs in an assignment statement preceding a
+     special builtin, but not with any other simple command.
+
+  25. A non-interactive shell exits with an error status if the
+     iteration variable in a 'for' statement or the selection variable
+     in a 'select' statement is a readonly variable.
+
+  26. Process substitution is not available.
+
+  27. Assignment statements preceding POSIX special builtins persist in
+     the shell environment after the builtin completes.
+
+  28. Assignment statements preceding shell function calls persist in
+     the shell environment after the function returns, as if a POSIX
+     special builtin command had been executed.
+
+  29. The 'export' and 'readonly' builtin commands display their output
+     in the format required by POSIX.
+
+  30. The 'trap' builtin displays signal names without the leading
+     'SIG'.
+
+  31. The 'trap' builtin doesn't check the first argument for a possible
+     signal specification and revert the signal handling to the original
+     disposition if it is, unless that argument consists solely of
+     digits and is a valid signal number.  If users want to reset the
+     handler for a given signal to the original disposition, they should
+     use '-' as the first argument.
+
+  32. The '.' and 'source' builtins do not search the current directory
+     for the filename argument if it is not found by searching 'PATH'.
+
+  33. Subshells spawned to execute command substitutions inherit the
+     value of the '-e' option from the parent shell.  When not in POSIX
+     mode, Bash clears the '-e' option in such subshells.
+
+  34. Alias expansion is always enabled, even in non-interactive shells.
+
+  35. When the 'alias' builtin displays alias definitions, it does not
+     display them with a leading 'alias ' unless the '-p' option is
+     supplied.
+
+  36. When the 'set' builtin is invoked without options, it does not
+     display shell function names and definitions.
+
+  37. When the 'set' builtin is invoked without options, it displays
+     variable values without quotes, unless they contain shell
+     metacharacters, even if the result contains nonprinting characters.
+
+  38. When the 'cd' builtin is invoked in LOGICAL mode, and the pathname
+     constructed from '$PWD' and the directory name supplied as an
+     argument does not refer to an existing directory, 'cd' will fail
+     instead of falling back to PHYSICAL mode.
+
+  39. The 'pwd' builtin verifies that the value it prints is the same as
+     the current directory, even if it is not asked to check the file
+     system with the '-P' option.
+
+  40. When listing the history, the 'fc' builtin does not include an
+     indication of whether or not a history entry has been modified.
+
+  41. The default editor used by 'fc' is 'ed'.
+
+  42. The 'type' and 'command' builtins will not report a non-executable
+     file as having been found, though the shell will attempt to execute
+     such a file if it is the only so-named file found in '$PATH'.
+
+  43. The 'vi' editing mode will invoke the 'vi' editor directly when
+     the 'v' command is run, instead of checking '$VISUAL' and
+     '$EDITOR'.
+
+  44. When the 'xpg_echo' option is enabled, Bash does not attempt to
+     interpret any arguments to 'echo' as options.  Each argument is
+     displayed, after escape characters are converted.
+
+  45. The 'ulimit' builtin uses a block size of 512 bytes for the '-c'
+     and '-f' options.
+
+  46. The arrival of 'SIGCHLD' when a trap is set on 'SIGCHLD' does not
+     interrupt the 'wait' builtin and cause it to return immediately.
+     The trap command is run once for each child that exits.
+
+   There is other POSIX behavior that Bash does not implement by default
+even when in POSIX mode.  Specifically:
+
+  1. The 'fc' builtin checks '$EDITOR' as a program to edit history
+     entries if 'FCEDIT' is unset, rather than defaulting directly to
+     'ed'.  'fc' uses 'ed' if 'EDITOR' is unset.
+
+  2. As noted above, Bash requires the 'xpg_echo' option to be enabled
+     for the 'echo' builtin to be fully conformant.
+
+   Bash can be configured to be POSIX-conformant by default, by
+specifying the '--enable-strict-posix-default' to 'configure' when
+building (*note Optional Features::).
